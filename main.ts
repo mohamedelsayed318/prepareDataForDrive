@@ -1,40 +1,50 @@
-import yargs from "yargs";
-import youtubedl from "youtube-dl-exec";
-import logger from "progress-estimator";
+import * as fs from "fs";
+import * as path from "path";
+import * as XLSX from "xlsx";
+import { download } from "./downloader";
 
-yargs
-  .scriptName("yt-download")
-  .usage("$0 <cmd> [args]")
-  .command(
-    "download <url>",
-    "Download a YouTube video",
-    (yargs) => {
-      yargs.positional("url", {
-        describe: "The URL of the YouTube video to download",
-        type: "string",
-      });
-      yargs.option("output", {
-        alias: "o",
-        describe: "The path to the output file",
-        type: "string",
-      });
-    },
-    async (argv) => {
+async function readExcel(): Promise<void> {
+  const filePath = "./data.xlsx";
+  const fileBuffer = fs.readFileSync(filePath);
+  const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+
+  workbook.SheetNames.forEach(async (sheetName) => {
+    console.log(`Processing sheet: ${sheetName}`);
+    const sheet = workbook.Sheets[sheetName];
+    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    if (rows.length === 0) {
+      console.log("No data found in the sheet.");
+      return;
+    }
+
+    const parentFolder = rows[0][0]?.toString().trim() || "videos";
+    const dirPath = path.join(__dirname, parentFolder);
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log(`Created parent folder: ${dirPath}`);
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.length < 2) continue;
+
+      const videoName = row[0]?.toString().trim() || `video_${i}`;
+      const videoUrl = row[1]?.toString().trim();
+
+      if (!videoUrl) {
+        console.log(`Skipping row ${i + 1} - no URL provided`);
+        continue;
+      }
+      const numberedName = `${i}. ${videoName}.mp4`;
+      const outputPath = path.join(dirPath, numberedName);
+      console.log(`Downloading (${i}/${rows.length - 1}): ${videoUrl}`);
       try {
-        const promise = youtubedl(argv.url as string, {
-          format: "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4",
-          output: argv.output as string,
-        });
-
-        const result = await logger()(
-          promise,
-          `Obtaining ${argv.url as string}`
-        );
-        console.log(result);
+        await download(videoUrl, outputPath);
+        console.log(`✅ Success: ${numberedName}`);
       } catch (error) {
-        console.error("Failed to download video", error);
+        console.error(`❌ Failed to download ${videoUrl}:`, error);
       }
     }
-  )
-  .demandCommand(1, "You must specify a command")
-  .help().argv;
+  });
+}
+
+readExcel().catch(console.error);

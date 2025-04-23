@@ -17,6 +17,7 @@
     "progress-estimator": "^0.3.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
+    "xlsx": "^0.18.5",
     "yargs": "^17.7.2",
     "youtube-dl-exec": "^3.0.20"
   },

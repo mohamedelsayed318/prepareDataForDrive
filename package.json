@@ -1,0 +1,26 @@
+{
+  "name": "new-folder",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "npx ts-node main.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "description": "",
+  "dependencies": {
+    "@types/node": "^22.14.1",
+    "axios": "^1.8.4",
+    "progress-estimator": "^0.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "yargs": "^17.7.2",
+    "youtube-dl-exec": "^3.0.20"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.33"
+  }
+}
